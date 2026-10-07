@@ -106,7 +106,8 @@ metadata:
 - **电路图用 schemdraw 画（Python 电路库，装：`pip install schemdraw`）**——真电路符号（电阻/MOS/电容）+ 命名引脚 IC，输出 SVG；比手拼坐标可靠。实测要点：
   1. **`Ic.at()` 定位的是方块左下角**（不是中心！）；`.label()` 在框中央；
   2. **IC 引脚位置必须 read-back**（`tuple(ic.VIN)` 等锚点），不要凭 pos 参数猜——pos 实际落点有偏差；**正确流程 = 先放 IC → 读回每个引脚真实坐标 → 再按这些坐标布置主线**（引脚 x 对齐主线节点 → 纯垂直连线、零交叉）；
-  3. `NFet().right()` 的几何：drain(起点x,0)/source(起点x,-1.5)/gate(起点x+1.37,-0.75)——主线在 source 处**下沉 1.5**，栅极连线要绕符号下方（三段折线：下绕→水平→上到栅极），不要横穿符号；
+  3. **⚠️ 方向状态会继承（大坑）**：顺序放置的元素（不加方向）会继承"上一条线的方向"——实测 MOS 被上一条竖线带得**整体转横**（source 跑到左边、gate 到左下），视觉上"三极管位置不对"却查不出坐标错。**Bjt/FET 类必须 `elm.NFet().at(x,y).right()` 显式定位+定向**（.at() 只定位不校正方向；.right() 在向下线之后仍给出正确竖直姿态）；生成后**打印锚点核对**（`tuple(q.drain/source/gate)`）；
+  4. `NFet` 几何（正确朝向）：drain(轴x,0)/source(轴x,-1.5)/gate(轴x+1.37,-0.75)，符号图形在轴右侧展开；主线在 source 处**下沉 1.5**——把主线画成"横→拐下（Q1 居中在下降段）→拐横"最清晰；栅极连线沿符号右缘竖直向上到 gate 锚点；
   4. 标签避线：给主线元件打标用 loc='top'（竖线只到 y=0，上方安全）或 'right'（线终点外侧）；文字不许压符号——渲染后肉眼验证；
   5. 生成后**用 Edge 无头截图检查**（browser_harness 挂掉时的后备）：`msedge --headless=new --disable-gpu --force-device-scale-factor=2 --screenshot=out.png --window-size=W,H --virtual-time-budget=4000 "file:///路径.svg"`，再用 PIL 裁剪白边（ImageChops.difference + getbbox），最后肉眼过一遍：线对齐引脚、文字不遮挡、无悬空线；
 - **SVG 生成后必须用浏览器渲染截图逐张检查**（肉眼过一遍），实测三类坑：
