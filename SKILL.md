@@ -71,7 +71,8 @@ metadata:
 2. 每个关键器件**查原厂数据手册核实参数**（用 `ee-datasheet-master` 或 web_search），不许凭记忆；
 3. 输出格式：选定型号 + 关键参数 + **嘉立创编号（LCSC Cxxxxx）** + 备选/国产替代 + 选它的理由；
    - ⚠️ **嘉立创编号是硬要求（强制）**：**板上所有物料**——IC、被动件、MOS、电感、晶振、**连接器、座子、排针**——每颗都要给出 LCSC 编号并核对库存；**查不到编号的器件一律不用**（换能查到的料）。
-   - **分级例外（原理图阶段）**：用户要先画原理图、还没到 BOM 时，**通用无源件与标准连接器**（阻容、排针、按键、LED、保险丝、可选模块座）允许写「规格 + 封装 + 按规格配单」，并在文档里显式标注；**投板前的 BOM 阶段必须逐颗锁定编号并核库存**。理由：原理图阶段锁死无源件编号会拖慢画图，且同规格多品牌库存波动大。
+   - **无豁免（2026-10 用户明确否决「按规格配单」）**：任何物料——包括阻容、排针、按键、LED、保险丝、模组——**都必须给出立创编号**；只有纯 PCB 图形（pogo 焊盘、测试点、自制跳线焊盘）可写「PCB 图形，无器件编号」。
+   - **批量查编号的实测方法（比逐个 web_search 快一个数量级）**：嘉立创公开 API 可直接查——`POST https://jlcpcb.com/api/overseas-pcb-order/v1/shoppingCart/smtGood/selectSmtComponentList`，JSON body `{"currentPage":1,"pageSize":10,"keyword":"0402 10K 1%","componentLibraryType":"base"}`，返回 `data.componentPageInfo.list[].componentCode`（即 C 编号）+ `componentModelEn` + `componentBrandEn` + `componentSpecificationEn`（封装）。`base`=基础库（贴片免换料费），`expand`=扩展库。一次脚本可批量查完全部阻容与连接器。
    - **编号获取方法（实测）**：① 立创商城未登录的批量搜索会触发登录墙/反爬（szlcsc、lcsc 都挡），别硬闯；② 可行链路 = **web_search 用「制造商精确型号」搜候选编号**（命中率高）→ **逐个 web_extract 打开 `lcsc.com/product-detail/Cxxxx.html` 验证型号**（页面图片 alt 含 `型号名_Cxxxx_front.jpg`，URL 也常含型号）；**搜索引擎直给的编号错误率约 1/3，不验证必踩坑**；③ 同规格多品牌的无源件（大电容/功率电感/合金电阻）写「按规格配单」比锁死编号更稳（库存波动）；④ 交付时附 **BOM CSV** 供立创「BOM 配单」一键匹配。
 4. **保护分层**：硬件层（µs 级、兜底短路）+ 软件层（ms 级、实现「限流点可设」）；
 5. 关键计算当场用工具算（电感、反馈网络、检流电阻、热），不许心算。
