@@ -1,11 +1,11 @@
 ---
 name: hardware-design-flow
 description: "板卡级硬件设计全流程：需求澄清→选型→三份文档→PCB 规范→板级调试→软硬对接。"
-version: 1.0.0
-author: jin.tian, Hermes Agent
 license: MIT
-platforms: [windows]
 metadata:
+  version: 1.1.0
+  author: jin.tian, Hermes Agent
+  platforms: [windows]
   hermes:
     tags: [hardware, pcb, selection, bringup, documentation, workflow]
     category: hardware
@@ -91,6 +91,12 @@ metadata:
    - **编号获取方法（实测）**：① 立创商城未登录的批量搜索会触发登录墙/反爬（szlcsc、lcsc 都挡），别硬闯；② 可行链路 = **web_search 用「制造商精确型号」搜候选编号**（命中率高）→ **逐个 web_extract 打开 `lcsc.com/product-detail/Cxxxx.html` 验证型号**（页面图片 alt 含 `型号名_Cxxxx_front.jpg`，URL 也常含型号）；**搜索引擎直给的编号错误率约 1/3，不验证必踩坑**；③ 同规格多品牌的无源件（大电容/功率电感/合金电阻）写「按规格配单」比锁死编号更稳（库存波动）；④ 交付时附 **BOM CSV** 供立创「BOM 配单」一键匹配。
 4. **保护分层**：硬件层（µs 级、兜底短路）+ 软件层（ms 级、实现「限流点可设」）；
 5. 关键计算当场用工具算（电感、反馈网络、检流电阻、栅极电阻/最小脉宽、热），不许心算；每个参数都要写出依据、计算、最坏工况、验证点（见开头铁律）。
+
+### TI 电源的官方计算表与实物参数闭环
+
+设计或复核 TI 电源时，先从**对应芯片的 TI 官方产品页 → Design & development → Calculation tool** 下载适配该型号的最新设计表，再按真实原理图和器件手册代入。用户给的表作为工程输入，保留官方原件及来源/版本，核对系列、变体、阈值和模型适用条件。详细步骤见 [TI 电源计算表与器件核验](references/ti-power-design.md)，在选取电源外围、补偿、核算 ESR 或复核已有电源时读取。
+
+所有参与计算和判定的值都要找到对应手册的条件与来源。尤其输出电容要回读**完整型号、耐压、实际网络和并联数量**，查相应规格行的 ESR/纹波额定，再计算电容组的等效阻抗；同容值、不同耐压的参数不能混用。未确认值保留待核实状态，并通过敏感性分析确定能先完成的工作。计算器默认值、目录简述和示例板值均须核对后才能作为设计依据。
 
 ### 经验（板级实战提炼）
 
@@ -342,7 +348,7 @@ metadata:
 ## 本技能仓库
 
 - GitHub：`TodayJin/HARDWARE_DESIGN_SKILL`（与 STM32_DEV_SKILL 同模式：Hermes 技能目录里的副本即 git 仓库，直接 pull/push）
-- 位置：`C:\Users\EDY\AppData\Local\hermes\skills\hardware\hardware-design-flow`
+- 当前规范源：`C:\Users\EDY\.cc-switch\skills\hardware-design-flow`；Codex 的技能入口为指向该目录的链接。维护时用 `git rev-parse --show-toplevel` 确认当前仓库，避免修改旧缓存副本。
 - **随项目持续更新**：每完成一个项目的某阶段，把新经验/新坑追加回来（用户明确要求实时修改本技能）。
 - **维护准则（用户要求）**：只收录**通用**经验，或**抽象后**的方法（如「控制域取电点选某路降压输出的 eFuse 前分叉」）。**不收录**具体项目/器件的专属结论（如某电源的出厂短接线、某型号引脚怎么接）——那些留在项目自己的文档里，不往技能里塞。
 
